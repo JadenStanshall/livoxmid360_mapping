@@ -1,0 +1,65 @@
+diff --git a/super_odometry/config/livox_mid360.yaml b/super_odometry/config/livox_mid360.yaml
+index 06d5efc..5ae07be 100644
+--- a/super_odometry/config/livox_mid360.yaml
++++ b/super_odometry/config/livox_mid360.yaml
+@@ -1,7 +1,7 @@
+ /**:
+   ros__parameters:
+-    imu_topic: "/imu/data"
+-    laser_topic: "/lidar/scan"
++    imu_topic: "/livox/imu"
++    laser_topic: "/livox/lidar"
+     sensor: "livox"
+     use_imu_roll_pitch: false
+     save_ply: false   # This can affect real-time performance; make sure you have enough memory for saving point cloud
+@@ -18,7 +18,7 @@
+     # Feature Extraction Params
+     feature_extraction_node:
+         scan_line: 4 
+-        min_range: 0.2    #<!-- remove too closed points -->
++        min_range: 0.5    #<!-- remove too closed points -->
+         filter_point_size: 3
+ 
+     # Laser Mapping Params
+diff --git a/super_odometry/src/ImuPreintegration/imuPreintegration.cpp b/super_odometry/src/ImuPreintegration/imuPreintegration.cpp
+index 15e1fdd..464dcc0 100644
+--- a/super_odometry/src/ImuPreintegration/imuPreintegration.cpp
++++ b/super_odometry/src/ImuPreintegration/imuPreintegration.cpp
+@@ -56,7 +56,8 @@ namespace super_odometry {
+             ProjectName+"/imuodom_path", 1);
+         
+         // set relevant parameter
+-        std::shared_ptr<gtsam::PreintegrationParams> p = gtsam::PreintegrationParams::MakeSharedU(config_.imuGravity);
++        // MakeSharedU returns boost::shared_ptr in ROS Humble's GTSAM — use auto to avoid mismatch
++        auto p = gtsam::PreintegrationParams::MakeSharedU(config_.imuGravity);
+         
+         p->accelerometerCovariance =
+                 gtsam::Matrix33::Identity(3, 3) * pow(config_.imuAccNoise, 2); // acc white noise in continuous
+diff --git a/super_odometry/src/LidarProcess/LidarSlam.cpp b/super_odometry/src/LidarProcess/LidarSlam.cpp
+index 7dd3aac..6a9ba5c 100755
+--- a/super_odometry/src/LidarProcess/LidarSlam.cpp
++++ b/super_odometry/src/LidarProcess/LidarSlam.cpp
+@@ -167,6 +167,7 @@ namespace super_odometry {
+         
+         // Check motion thresholds and update map
+         if (checkMotionThresholds(timeLaserOdometry, stats)) {
++            last_T_w_lidar = T_w_lidar;
+             // Transform and add new features to map
+             transformAndAddToMap(EdgesPoints, WorldEdgesPoints, true);
+             transformAndAddToMap(PlanarsPoints, WorldPlanarsPoints, false);
+@@ -196,7 +197,6 @@ namespace super_odometry {
+             RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
+                                 "very small motion, not accumulating. %f", stats.translation_from_last);
+         }
+-    acceptResult = true;
+     return acceptResult;
+ }
+ 
+@@ -212,7 +212,6 @@ namespace super_odometry {
+ 
+         stats.translation_from_last = diff_from_last_T.pos.norm();
+         stats.rotation_from_last = 2 * atan2(diff_from_last_T.rot.vec().norm(), diff_from_last_T.rot.w());
+-        last_T_w_lidar=T_w_lidar;
+     }
+ 
+ 

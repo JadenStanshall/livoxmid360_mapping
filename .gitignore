@@ -1,0 +1,29 @@
+# ROS 2 build artifacts
+build/
+install/
+log/
+
+# Data — never commit bags or maps
+bags/*
+!bags/.gitkeep
+maps/*
+!maps/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.python-version
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Submodule build artifacts
+src/kiss_matcher/ros/cmake_test_discovery_*.json
+src/SuperOdom/super_odometry/PLY/

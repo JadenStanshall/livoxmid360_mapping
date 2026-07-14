@@ -1,0 +1,83 @@
+diff --git a/cpp/kiss_matcher/3rdparty/robin/robin.cmake b/cpp/kiss_matcher/3rdparty/robin/robin.cmake
+index 28542a3..e770eaa 100644
+--- a/cpp/kiss_matcher/3rdparty/robin/robin.cmake
++++ b/cpp/kiss_matcher/3rdparty/robin/robin.cmake
+@@ -25,36 +25,27 @@
+ option(PMC_BUILD_SHARED "Build pmc as a shared library (.so)" OFF)
+ 
+ include(FetchContent)
+-FetchContent_Declare(robin URL https://github.com/MIT-SPARK/ROBIN/archive/refs/tags/v.1.2.7.tar.gz)
+-FetchContent_GetProperties(robin)
+ 
+-# Prefer FetchContent_MakeAvailable when available (CMake 3.14+)
+-if(COMMAND FetchContent_MakeAvailable)
+-  FetchContent_MakeAvailable(robin)
++# PATCH_COMMAND patches DownloadProject.CMakeLists.cmake.in before add_subdirectory runs.
++# robin v1.2.7 ships this template with cmake_minimum_required(VERSION 2.8.2),
++# which CMake 4.x rejects. PATCH_COMMAND runs after download, before add_subdirectory.
++# Note: do NOT call FetchContent_Populate() before FetchContent_MakeAvailable() —
++# in CMake 4.x, MakeAvailable skips add_subdirectory for already-populated content.
++FetchContent_Declare(robin
++  URL https://github.com/MIT-SPARK/ROBIN/archive/refs/tags/v.1.2.7.tar.gz
++  PATCH_COMMAND sed -i
++    "s/cmake_minimum_required(VERSION 2.8.2)/cmake_minimum_required(VERSION 3.5)/"
++    cmake/DownloadProject.CMakeLists.cmake.in
++)
+ 
+-  # Mark ROBIN's include dirs as 'SYSTEM' to ignore third-party warnings
++FetchContent_MakeAvailable(robin)
++
++# Mark ROBIN's include dirs as 'SYSTEM' to ignore third-party warnings
++if(TARGET robin)
+   get_target_property(_robin_inc robin INTERFACE_INCLUDE_DIRECTORIES)
+   if(_robin_inc)
+     set_target_properties(robin PROPERTIES
+       INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_robin_inc}")
+   endif()
+-
+-# Fallback for older/special environments: Populate + add_subdirectory
+-else()
+-  # On CMake 3.30+, suppress CMP0169 warning for FetchContent_Populate by setting it to OLD
+-  if(POLICY CMP0169)
+-    cmake_policy(SET CMP0169 OLD)
+-  endif()
+-
+-  FetchContent_GetProperties(robin)
+-  if(NOT robin_POPULATED)
+-    FetchContent_Populate(robin)
+-    # Before 3.25 there is no SYSTEM option, so set system includes manually
+-    add_subdirectory(${robin_SOURCE_DIR} ${robin_BINARY_DIR} EXCLUDE_FROM_ALL)
+-    get_target_property(_robin_inc robin INTERFACE_INCLUDE_DIRECTORIES)
+-    if(_robin_inc)
+-      set_target_properties(robin PROPERTIES
+-        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_robin_inc}")
+-    endif()
+-  endif()
++  unset(_robin_inc)
+ endif()
+diff --git a/cpp/kiss_matcher/CMakeLists.txt b/cpp/kiss_matcher/CMakeLists.txt
+index 90868f0..ed0ebbe 100644
+--- a/cpp/kiss_matcher/CMakeLists.txt
++++ b/cpp/kiss_matcher/CMakeLists.txt
+@@ -20,7 +20,7 @@ message("")
+ option(USE_CCACHE "Build using Ccache if found on the path" ON)
+ option(USE_SYSTEM_EIGEN3 "Use system pre-installed Eigen" ON)
+ option(USE_SYSTEM_TBB "Use system pre-installed oneAPI/tbb" OFF)
+-option(USE_SYSTEM_ROBIN "Use system pre-installed ROBIN from SPARK @ MIT" ON)
++option(USE_SYSTEM_ROBIN "Use system pre-installed ROBIN from SPARK @ MIT" OFF)
+ option(USE_ADDRESS_SANITIZER "Use address sanitizer" OFF)
+ 
+ # Set a default build type if none is specified
+diff --git a/ros/src/slam/pose_graph_manager.cpp b/ros/src/slam/pose_graph_manager.cpp
+index 483099c..1fb93ed 100644
+--- a/ros/src/slam/pose_graph_manager.cpp
++++ b/ros/src/slam/pose_graph_manager.cpp
+@@ -595,6 +595,8 @@ void PoseGraphManager::saveFlagCallback(const std_msgs::msg::String::ConstShared
+   std::string seq_directory   = save_dir + "/" + seq_name_;
+   std::string scans_directory = seq_directory + "/scans";
+ 
++  fs::create_directories(seq_directory);
++
+   if (save_in_kitti_format_) {
+     RCLCPP_INFO(this->get_logger(),
+                 "Scans are saved in %s, following the KITTI and TUM format",

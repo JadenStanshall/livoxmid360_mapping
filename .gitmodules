@@ -1,0 +1,12 @@
+[submodule "src/spark_fast_lio"]
+	path = src/spark_fast_lio
+	url = https://github.com/MIT-SPARK/spark-fast-lio.git
+
+[submodule "src/kiss_matcher"]
+	path = src/kiss_matcher
+	url = https://github.com/MIT-SPARK/KISS-Matcher.git
+
+[submodule "src/SuperOdom"]
+	path = src/SuperOdom
+	url = https://github.com/superxslam/SuperOdom.git
+	branch = ros2

@@ -1,0 +1,41 @@
+# spark-fast-lio configuration for Livox Mid-360
+# Parameter names match declare_parameter<> calls in spark_fast_lio.cpp.
+# Topics (lidar / imu) are remapped in the launch file, not set here.
+
+/**:
+  ros__parameters:
+    common:
+      time_sync_en: false
+
+    preprocess:
+      lidar_type:       6     # 6 = Livox CustomMsg
+      scan_line:        4
+      timestamp_unit:   1     # 1 = MS in enum {SEC=0,MS=1,US=2,NS=3}; irrelevant for Livox CustomMsg (avia_handler hardcodes /1e6)
+      blind:            0.5   # ignore returns < 0.5 m
+      scan_rate:        10
+
+    point_filter_num: 1       # keep every point (increase to reduce CPU load)
+    filter_size_map: 0.05    # voxel size (m) for scan downsampling; smaller → more points for matching
+    max_iteration: 10        # IEKF iterations per scan; more iterations help converge with large initial errors
+
+    mapping:
+      acc_cov:  0.1
+      gyr_cov:  0.1
+      b_acc_cov: 0.01
+      b_gyr_cov: 0.0001
+      fov_degree:   360.0     # Mid-360 has full 360° horizontal FOV
+      det_range:    100.0     # effective range limit (m)
+      extrinsic_est_en: false
+      extrinsic_T: [0.0, 0.0, 0.0]
+      extrinsic_R: [1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0]
+
+    publish:
+      path_en:              true
+      scan_publish_en:      true
+      scan_bodyframe_pub_en: false
+
+    pcd_save:
+      pcd_save_en: true
+      interval: -1            # -1 = one file on shutdown

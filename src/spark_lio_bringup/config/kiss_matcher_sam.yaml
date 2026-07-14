@@ -1,0 +1,26 @@
+# KISS-Matcher-SAM configuration
+# Parameter names are taken directly from declare_parameter<> calls in pose_graph_manager.cpp.
+# Topics (/odom, /cloud) are hardcoded in the node source; remappings are set in the launch file.
+
+kiss_matcher_sam:
+  ros__parameters:
+
+    # Keyframe selection
+    keyframe.keyframe_threshold: 0.3       # m — add keyframe after 0.3m of travel
+
+    # Loop closure
+    loop.is_multilayer_env: true           # full 3-D NN search (indoor environments)
+    loop.loop_detection_radius: 15.0       # m
+    loop.loop_detection_timediff_threshold: 30.0  # seconds
+
+    # Local registration (KISS-Matcher)
+    local_reg.num_threads: 4
+
+    # Map resolution
+    map_voxel_resolution: 0.05             # m — resolution of the in-memory map
+    save_voxel_resolution: 0.05            # m — resolution when writing the PCD file
+
+    # Result saving — triggered via the /save_dir topic in run_mapping.sh
+    result.save_map_pcd: true
+    result.seq_name: "session"
+    result.save_in_kitti_format: true      # creates the seq_directory before saving the map PCD

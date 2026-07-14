@@ -1,0 +1,49 @@
+# SuperOdom — LiDAR-only mapping configuration for Livox Mid-360.
+# IMU is intentionally disabled: set imu_topic to "" so featureExtraction
+# falls back to its lidar-only path (identity quaternion, no deskewing).
+# This gives a clean lidar-only SLAM baseline to compare against the
+# spark-fast-lio + KISS-Matcher-SAM pipeline.
+
+/**:
+  ros__parameters:
+    imu_topic: "/imu_disabled"     # non-existent topic → imuBuf stays empty → lidar-only fallback (featureExtraction.cpp:483)
+                                   # empty string "" would abort on rclcpp subscription creation
+    laser_topic: "/livox/lidar"    # Livox CustomMsg — matches livox_ros_driver2 output
+    sensor: "livox"
+    use_imu_roll_pitch: false
+    save_ply: true                 # write map to ${ROOT_DIR}/PLY/saved_scans.ply
+
+    world_frame: "map"
+    world_frame_rot: "map_rot"
+    sensor_frame: "sensor"
+    sensor_frame_rot: "sensor_rot"
+
+    # Feature extraction
+    feature_extraction_node:
+        scan_line: 4
+        min_range: 0.3
+        filter_point_size: 3
+
+    # Laser mapping
+    laser_mapping_node:
+        mapping_line_resolution: 0.05
+        mapping_plane_resolution: 0.05
+        max_iterations: 10
+        max_surface_features: 4000
+        localization_mode: false
+        read_pose_file: false
+        init_x: 0.0
+        init_y: 0.0
+        init_z: 0.0
+        init_roll: 0.0
+        init_pitch: 0.0
+        init_yaw: 0.0
+
+    # IMU preintegration — node still launches but stays idle with no imu_topic.
+    imu_preintegration_node:
+        lidar_correction_noise: 0.01
+        acc_n: 3.9939570888238808e-03
+        gyr_n: 1.5636343949698187e-03
+        acc_w: 6.4356659353532566e-05
+        gyr_w: 3.5640318696367613e-05
+        g_norm: 9.80511

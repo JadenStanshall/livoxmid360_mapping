@@ -1,0 +1,34 @@
+# SuperOdom localization configuration (SuperLoc mode)
+# Repo: https://github.com/superxslam/SuperOdom  (ros2 branch)
+#
+# NOTE: Verify parameter names against the built package after cloning.
+# Run: ros2 param dump /superloc_node  (while node is running) to inspect actuals.
+
+superloc_node:
+  ros__parameters:
+
+    # Mode
+    localization_mode: true        # true = localize against prior map; false = SLAM/mapping
+
+    # Prior map — absolute path to final_map.pcd produced by postprocess_map.py.
+    # Overridden at launch time via the map_path launch argument.
+    map_dir: ""
+
+    # Input topics — must match the live driver topics (do not change)
+    lidar_topic: "/livox/lidar"
+    imu_topic:   "/livox/imu"
+
+    # Initial pose in the prior map frame.
+    # The robot must start from a known position. Override these or use read_pose_file.
+    read_pose_file: false          # set true to load pose from a .txt file instead
+    x:     0.0
+    y:     0.0
+    z:     0.0
+    roll:  0.0
+    pitch: 0.0
+    yaw:   0.0
+
+    # Local map window — default ±525 m in X/Y is more than sufficient for any indoor space.
+    # Only change if memory pressure requires it.
+    # local_map_size_x: 525.0
+    # local_map_size_y: 525.0
