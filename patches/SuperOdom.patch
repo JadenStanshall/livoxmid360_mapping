@@ -35,6 +35,29 @@ index 15e1fdd..464dcc0 100644
          
          p->accelerometerCovariance =
                  gtsam::Matrix33::Identity(3, 3) * pow(config_.imuAccNoise, 2); // acc white noise in continuous
+diff --git a/super_odometry/package.xml b/super_odometry/package.xml
+index f2de149..ce29790 100755
+--- a/super_odometry/package.xml
++++ b/super_odometry/package.xml
+@@ -15,7 +15,7 @@
+ 
+   <license>BSD</license>
+  
+-  <buildtool_depend>amend_cmake</buildtool_depend>
++  <buildtool_depend>ament_cmake</buildtool_depend>
+ 
+   <depend>rclcpp</depend>
+   <depend>rclpy</depend>
+@@ -27,7 +27,7 @@
+   <depend>super_odometry_msgs</depend>
+   <depend>image_transport</depend>
+   <!-- <depend>tf_conversions</depend> -->
+-  <depend>pcl_conversion</depend>
++  <depend>pcl_conversions</depend>
+   <depend>sophus</depend>
+   <depend>livox_ros_driver2</depend>
+   
+
 diff --git a/super_odometry/src/LidarProcess/LidarSlam.cpp b/super_odometry/src/LidarProcess/LidarSlam.cpp
 index 7dd3aac..6a9ba5c 100755
 --- a/super_odometry/src/LidarProcess/LidarSlam.cpp
